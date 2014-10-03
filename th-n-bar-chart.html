@@ -32,6 +32,13 @@
           text-align: center;
         }
 
+        .touched {
+          opacity: 0.5;
+          fill: black;
+          width: 100%;
+          height: 100%;
+        }
+
       </style>
 
       <svg id="chart"></svg>
@@ -289,7 +296,8 @@
             height = self.dims.height,
             x = self.x,
             y = self.y,
-            startY;
+            startY,
+            touchOverlay;
 
         var drag = d3.behavior.drag()
             .origin(function() { 
@@ -301,17 +309,23 @@
 
         function dragMove(d,i){
           startY = startY || d3.event.y;
-          
           var yMovement = startY - d3.event.y || 0,
-              barHeight = Math.abs(y(d.value) - y(0)+ yMovement) ,
+              barHeight = Math.abs(y(d.value) - y(0)+ yMovement),
               yPos = height - barHeight,
-              barClass = "data"+i;
+              barClass = "data"+i,
+              rgbCode = d.color ? self.hexToRgb(d.color) : self.hexToRgb(self.colors.accents[i]);
 
           d3.select(this) 
             .attr('y', function(d){
               return height - Math.max((y(d.value)+yMovement), y(0));
             })
-            .attr('height',  barHeight);
+            .attr('height',  barHeight)
+            .style("fill", function(d){ 
+              return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25);
+            })
+            .style("stroke", function(d){ 
+              return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25);
+            });
 
           self.container.selectAll(".value").filter("."+barClass)
             .text(function(d){
@@ -319,13 +333,17 @@
               // TODO: fix for bars with negative value
               return d.value + parseInt(y.invert(yMovement));
             })
+            .style('fill', function(){
+              return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25);
+            })
+            .style('stroke', function(){
+              return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25);
+            })
             .attr('transform', function(d){
               return d.value<0 
                 ? "translate(0,0)"
                 : "translate(0,"+(-yMovement)+")";
             });
-
-            console.log(self.container.selectAll(".value").filter("."+barClass));
         }        
         
         function dragEnd(d){
@@ -336,13 +354,17 @@
             .attr('y', function(d) { 
               // or, if data<0 start bar from 0 otherwise from value
               return height - Math.max(y(d.value), y(0));})
-            
             .attr('height', function(d) {
               // subtract y(0) from height to support neg. values
-              return Math.abs(y(d.value) - y(0));});              
+              return Math.abs(y(d.value) - y(0));})
+            .style("fill", function(d,i){ 
+              return d.color ? d.color : self.colors.accents[i];
+            })
+            .style("stroke", function(d,i){ 
+              return d.color ? d.color : self.colors.accents[i];
+            });              
 
           self.values
-
             .transition().ease('elastic' , 1 , .7)
             .duration(600)
             .attr('transform', "")
@@ -354,13 +376,27 @@
             })
             .text(function(d){
               return d.value;
+            })
+            .style('fill', function(d,i){
+              return d.color ? d.color : self.colors.accents[i];
+            })
+            .style('stroke', function(d,i){
+              return d.color ? d.color : self.colors.accents[i];
             });
 
           startY = null;
         }
 
 
-        self.bars.call(drag).transition().duration(this.animationDelay)
+        self.bars
+          .call(drag)
+          .on('down', function(d,i){
+            var rgbCode = d.color ? self.hexToRgb(d.color) : self.hexToRgb(self.colors.accents[i]);
+            d3.select(this)
+              .style('fill', d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25) )
+              .style('stroke', d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25) );
+          })
+          .transition().duration(this.animationDelay)
           .attr('x', function(d, i) { return self.x(i); })
           .attr('y', function(d) { 
             // or, if data<0 start bar from 0 otherwise from value
