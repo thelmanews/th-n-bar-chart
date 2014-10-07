@@ -215,9 +215,9 @@
 
     Polymer('th-n-bar-chart', {
       chartData: [
-        {label: 'Player', value: 15, color:''},
-        {label: 'Vendor', value: 20, color:''},
-        {label: 'Mascot', value: 35, color:''}
+        {label: 'Player', value: 15, display_value:'15mm', color:''},
+        {label: 'Vendor', value: 20, display_value:'$20mm', color:''},
+        {label: 'Mascot', value: 35, display_value:'$35', color:''}
       ],
       /**
        * show horizontal line from zero point when dealing with negative values
@@ -232,7 +232,8 @@
       init: function() {
         
           var self = this;
-           
+          
+          self.parseValues();
           self.dims = self.setupDimensions(self);
 
           self.dims = staticObj.setupBarLabelDims(self.dims, self.chartData, 1, 1.3, self.wrapLabels);
@@ -269,6 +270,35 @@
           
           self.values.text(function(d) {return d.display_value ? d.display_value : d.value ;});
             
+      },
+      parseValues: function(){
+        var self = this,
+            preValMatch = /\D*(?=\d*)/,
+            postValMatch = /\D*\d*\.?\d*(\D*)/,
+            valMatch = /\D*(\d*\.?\d*)\D*/,
+            dataLength = self.chartData.length;
+            
+        for (var i=0; i<dataLength; i++){
+          var datapoint = self.chartData[i];
+          if (datapoint.display_value){
+            datapoint.preVal = datapoint.display_value.replace(',','').match(preValMatch)[0];
+            datapoint.postVal = datapoint.display_value.replace(',','').match(postValMatch)[1];
+            datapoint.value = parseFloat(datapoint.display_value.replace(',','').match(valMatch)[1]);
+            
+            // console.log(datapoint.value);
+            // console.log(display_value.split(numberMatch));
+            // console.log(self.chartData[i].display_value);  
+          }
+          
+        }
+        
+        // clean up regex
+        // use the value for the scale and display value for the display value
+        // figure out the case where display value isnt provided
+        // add count up to the number initally
+        // figure out the decimal places and commas
+        // make sure parsevalues is called in the right spots (updateData)
+        // 
       },
       reset: function(hard) {
 
