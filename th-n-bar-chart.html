@@ -119,6 +119,7 @@
           var horClass = 'horAxis'+(polymerObj.showHorizontalAxis ? ' stroke-foreground' : '');
           polymerObj.horAxis = polymerObj.container.selectAll('.horAxis').data([1]).enter().append('line').attr('class', horClass);
 
+
       };
 
       staticObj._setElementSizes = function(polymerObj) {
@@ -237,7 +238,11 @@
           self.y = y;
           self.x = x;
 
+          //create bars, values, labels
           staticObj._setupElements(self);
+          
+          //add touch interaction to bars
+          self.setupTouchAnimate();
 
           //setting sizes
           staticObj._setElementSizes(self);
@@ -265,7 +270,7 @@
           if (datapoint.display_value){
             datapoint.prefix = datapoint.display_value.replace(',','').match(valueRegex)[1];
             datapoint.suffix = datapoint.display_value.replace(',','').match(valueRegex)[3];
-            // valueDisplayed is the number in the display_value string, used in touchAnimate
+            // valueDisplayed is the number in the display_value string, used in setupTouchAnimate
             datapoint.valueDisplayed = parseFloat(datapoint.display_value.replace(',','').match(valueRegex)[2]);
             datapoint.decimalPlaces = self.getDecimalPlaces(datapoint.valueDisplayed);
           } else {
@@ -359,10 +364,10 @@
           .attr('x2', self.dims.width)
           .attr('y2', self.dims.height - y(0));
 
-        self.touchAnimate();
+        
 
       },
-      touchAnimate: function(){
+      setupTouchAnimate: function(){
 
         var self = this,
             height = self.dims.height,
