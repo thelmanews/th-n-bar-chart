@@ -585,9 +585,8 @@
           } else {
             self.labels.text(function(d) {return d.label;});
           }
-          // self.labels.text(function(d) {return d.label;});
-          self.values.text(function(d) {return d.prefix + d.value + d.suffix ;}); 
-          // self.animate();
+          
+          self.values.text(function(d) {return d.display_value ? d.display_value : d.value ;}); 
 
       },
 
