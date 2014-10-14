@@ -325,16 +325,92 @@
 
         var self = this,
             margin = self.dims.margin,
+            height = self.dims.height,
+            x = self.x,
+            y = self.y,
+            progress=0;
+
+        self.bars
+
+          .transition().duration(this.animationDelay)
+          .attr('x', function(d, i) { return x(i); })
+          .attr('y', function(d) { 
+            // or, if data<0 start bar from 0 otherwise from value
+            return height - Math.max(y(d.value), y(0));})
+          .attr('width', self.dims.bars.width)
+          .attr('height', function(d) {
+            // subtract y(0) from height to support neg. values
+            return Math.abs(y(d.value) - y(0));})
+          .style('opacity', 1);
+
+        self.values
+          .transition().duration(this.animationDelay)
+          .attr('x', function(d,i) { return x(i) + self.dims.bars.width/2; })
+          .attr('y', function(d) {
+          return d.value<0 
+               ? height - y(0) - self.dims.values.margin // data<0 then value over zero line 
+               : height - y(d.value) - self.dims.values.margin;  // data>0 valye on top of the chart
+          })
+          .style('opacity', 1)
+          .tween('text', function(d){
+            var progress = 0; // TODO: not always 0?
+            var i = d3.interpolate(progress, d.value);
+            
+            return function(t) {  
+                progress = i(t);
+                if (progress >= 1000){
+                  this.textContent = d.prefix + self.addCommasToNum(progress.toFixed(d.decimalPlaces)) + d.suffix;
+                } else {
+                  this.textContent = d.prefix + progress.toFixed(d.decimalPlaces) + d.suffix;
+                }
+              };
+            })
+
+        if (self.wrapLabels){
+          self.labels.select(function() {return this.parentNode.parentNode; }).transition().duration(this.animationDelay)
+            .attr('transform', function(d,i){
+              var xPos = x(i);
+              var yPos = height + self.dims.margin.label;
+              return "translate("+xPos+","+yPos+")";
+          });
+        } else {
+          self.labels.transition().duration(this.animationDelay)
+          .attr('text-anchor',function(){ 
+            return self.dims.labels.angle > 0 ? "left" : "middle";
+            
+          })
+          .attr('transform', function(d,i){
+              var xPos = x(i) + self.dims.bars.width/2 ;
+              var yPos = height + self.dims.margin.label;
+              var rotation = self.dims.labels.angle;
+
+              //if there is an angle, move labels slightly to top left
+              if(rotation> 0) {
+                xPos = xPos -7;
+                yPos = yPos -3;
+              }
+              return "translate("+xPos+","+yPos+") rotate("+ rotation +")"
+          });
+        }
+
+        self.horAxis.transition().duration(self.animationDelay)
+          .attr('x1', 0)
+          .attr('y1', self.dims.height - y(0))
+          .attr('x2', self.dims.width)
+          .attr('y2', self.dims.height - y(0));
+
+        self.touchAnimate();
+
+      },
+      touchAnimate: function(){
+
+        var self = this,
             width = self.dims.width,
             height = self.dims.height,
             x = self.x,
             y = self.y,
-            startY,
-            touchOverlay,
-            progress=0;
-
-        self._prevProgress = 0;
-
+            startY;
+       
         var drag = d3.behavior.drag()
             .origin(function() { 
                   var t = d3.select(this);
@@ -425,85 +501,22 @@
           startY = null;
         }
 
+        // Add drag functionality to bars and highlight them when touched
         self.bars
-          .call(drag)
+          .call(drag)          
           .on('down', function(d,i){
             var rgbCode = d.color ? self.hexToRgb(d.color) : self.hexToRgb(self.colors.accents[i]);
             d3.select(this)
               .style('fill', d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25) )
               .style('stroke', d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25) );
-          })
-          .transition().duration(this.animationDelay)
-          .attr('x', function(d, i) { return self.x(i); })
-          .attr('y', function(d) { 
-            // or, if data<0 start bar from 0 otherwise from value
-            return height - Math.max(y(d.value), y(0));})
-          .attr('width', self.dims.bars.width)
-          .attr('height', function(d) {
-            // subtract y(0) from height to support neg. values
-            return Math.abs(y(d.value) - y(0));})
-          .style('opacity', 1);
-
-        self.values
-          .transition().duration(this.animationDelay)
-          .attr('x', function(d,i) { return self.x(i) + self.dims.bars.width/2; })
-          .attr('y', function(d) {
-          return d.value<0 
-               ? height - y(0) - self.dims.values.margin // data<0 then value over zero line 
-               : height - y(d.value) - self.dims.values.margin;  // data>0 valye on top of the chart
-          })
-          .style('opacity', 1)
-          .tween('text', function(d){
-            var progress = 0; // TODO: not always 0?
-            var i = d3.interpolate(progress, d.value);
-            
-            return function(t) {  
-                progress = i(t);
-                if (progress >= 1000){
-                  this.textContent = d.prefix + self.addCommasToNum(progress.toFixed(d.decimalPlaces)) + d.suffix;
-                } else {
-                  this.textContent = d.prefix + progress.toFixed(d.decimalPlaces) + d.suffix;
-                }
-              };
-            })
-
-        if (self.wrapLabels){
-          self.labels.select(function() {return this.parentNode.parentNode; }).transition().duration(this.animationDelay)
-            .attr('transform', function(d,i){
-              var xPos = self.x(i);
-              var yPos = height + self.dims.margin.label;
-              return "translate("+xPos+","+yPos+")";
           });
-        } else {
-          self.labels.transition().duration(this.animationDelay)
-          .attr('text-anchor',function(){ 
-            return self.dims.labels.angle > 0 ? "left" : "middle";
-            
-          })
-          .attr('transform', function(d,i){
-              var xPos = self.x(i) + self.dims.bars.width/2 ;
-              var yPos = height + self.dims.margin.label;
-              var rotation = self.dims.labels.angle;
+          
 
-              //if there is an angle, move labels slightly to top left
-              if(rotation> 0) {
-                xPos = xPos -7;
-                yPos = yPos -3;
-              }
-              return "translate("+xPos+","+yPos+") rotate("+ rotation +")"
-          });
-        }
+       
 
-        self.horAxis.transition().duration(self.animationDelay)
-          .attr('x1', 0)
-          .attr('y1', self.dims.height - y(0))
-          .attr('x2', self.dims.width)
-          .attr('y2', self.dims.height - y(0));
+       
 
-      },
-      touchAnimate: function(){
-
-         // TODO
+     
 
 
       },
@@ -513,8 +526,6 @@
           var self = this;
           
           self.dims = self.setupDimensions(self);
-
-          // self.setupExtraDimensions();
 
           staticObj._setupContainerSize(self); // correct size if margins are changed (by setting the label diagonal)
 
