@@ -11,13 +11,6 @@
           display: inline-block;
           position: relative;
         }
-        #chart {
-
-        }
-        #chart text.label {
-          /*font-size: 13px;*/
-          /*font-weight: 300;*/
-        }
 
         #data_errors {  
           display: none;
@@ -30,13 +23,6 @@
 
         .wrapped-labels {
           text-align: center;
-        }
-
-        .touched {
-          opacity: 0.5;
-          fill: black;
-          width: 100%;
-          height: 100%;
         }
 
       </style>
@@ -84,9 +70,7 @@
             .attr('class','bar')
             .attr('height', 0)
             .attr('y', function(d){ 
-              // TODO: Fix so it always starts in the right place
-              // return polymerObj.y(0);
-              return height;
+              return polymerObj.y(0);
             });
 
           // Append labels using HTML or SVG, depending on if they should wrap or angle
@@ -151,10 +135,6 @@
           while (polymerObj.chartData.length > polymerObj.colors.count) {
             polymerObj.addMoreColors(polymerObj);
           }
-      
-         
-
-
 
           polymerObj.bars
             .attr("class", function(d,i){return "bar data"+i;})
@@ -162,8 +142,6 @@
             .attr('stroke', function(d,i){ return polymerObj.colors.accents[i]; })
             .style("fill", function(d){ return d.color })
             .style("stroke", function(d){ return d.color });
-
-          
 
           if(polymerObj.wrapLabels){
             polymerObj.labels.select(function() {return this.parentNode; })
@@ -177,9 +155,7 @@
             polymerObj.labels
             .attr("class", function(d,i){return "label no-stroke data"+i;})
             .attr('fill', function(d,i){ return polymerObj.colors.accents[i]; })
-            .attr('stroke', function(d,i){ return polymerObj.colors.accents[i]; })
-            .style("fill", function(d){ return d.color })
-            .style("stroke", function(d){ return d.color });
+            .style("fill", function(d){ return d.color });
           }
           
           
@@ -219,12 +195,11 @@
 
     // POLYMER OBJECT DEF.
 
-
     Polymer('th-n-bar-chart', {
       chartData: [
-        {label: 'Player', value: 15, display_value:'$15,000', color:''},
-        {label: 'Vendor', value: 20, display_value:'$20,000', color:''},
-        {label: 'Mascot', value: 35, display_value:'$35,000', color:''}
+        {label: 'Player', value: 15,  color:''},
+        {label: 'Vendor', value: -20,  color:''},
+        {label: 'Mascot', value: 35,  color:''}
       ],
       /**
        * show horizontal line from zero point when dealing with negative values
@@ -239,7 +214,6 @@
       init: function() {
         
           var self = this;
-          
           self.parseValues();
           self.dims = self.setupDimensions(self);
 
@@ -285,27 +259,25 @@
             valueRegex = /(\D*)(\d*\.?\d*)(\D*)/, // Matchgroups: 1) prefix 2) value 3) suffix
             dataLength = self.chartData.length;
             
-        // Split display value into pieces to separate out value and detect decimal places    
+        // Split display value into pieces to separate out suffix/prefix and detect decimal places    
         for (var i=0; i<dataLength; i++){
           var datapoint = self.chartData[i];
           if (datapoint.display_value){
             datapoint.prefix = datapoint.display_value.replace(',','').match(valueRegex)[1];
-            datapoint.value = parseFloat(datapoint.display_value.replace(',','').match(valueRegex)[2]);
             datapoint.suffix = datapoint.display_value.replace(',','').match(valueRegex)[3];
+            // valueDisplayed is the number in the display_value string, used in touchAnimate
+            datapoint.valueDisplayed = parseFloat(datapoint.display_value.replace(',','').match(valueRegex)[2]);
+            datapoint.decimalPlaces = self.getDecimalPlaces(datapoint.valueDisplayed);
+          } else {
+            datapoint.prefix = datapoint.value > 0 ? '' : '-';
+            datapoint.suffix = '';
+            datapoint.valueDisplay ed = Math.abs(datapoint.value);
             datapoint.decimalPlaces = self.getDecimalPlaces(datapoint.value);
           }
           
         }
-        
-        // use the value for the scale and display value for the display value
-        // figure out the case where display value isnt provided
-        // figure out the decimal places and commas
-        // make sure parsevalues is called in the right spots (updateData)
-        // 
       },
       reset: function(hard) {
-
-          
           var self = this,
               height= self.dims.height;
           // without transition
@@ -331,7 +303,6 @@
             progress=0;
 
         self.bars
-
           .transition().duration(this.animationDelay)
           .attr('x', function(d, i) { return x(i); })
           .attr('y', function(d) { 
@@ -352,19 +323,8 @@
                : height - y(d.value) - self.dims.values.margin;  // data>0 valye on top of the chart
           })
           .style('opacity', 1)
-          .tween('text', function(d){
-            var progress = 0; // TODO: not always 0?
-            var i = d3.interpolate(progress, d.value);
-            
-            return function(t) {  
-                progress = i(t);
-                if (progress >= 1000){
-                  this.textContent = d.prefix + self.addCommasToNum(progress.toFixed(d.decimalPlaces)) + d.suffix;
-                } else {
-                  this.textContent = d.prefix + progress.toFixed(d.decimalPlaces) + d.suffix;
-                }
-              };
-            })
+          .text(function(d){ return d.display_value ? d.display_value : d.value});
+          
 
         if (self.wrapLabels){
           self.labels.select(function() {return this.parentNode.parentNode; }).transition().duration(this.animationDelay)
@@ -405,7 +365,6 @@
       touchAnimate: function(){
 
         var self = this,
-            width = self.dims.width,
             height = self.dims.height,
             x = self.x,
             y = self.y,
@@ -423,10 +382,10 @@
           startY = startY || d3.event.y;
           var yMovement = startY - d3.event.y || 0,
               barHeight = Math.abs(y(d.value) - y(0)+ yMovement),
-              yPos = height - barHeight,
               barClass = "data"+i,
               rgbCode = d.color ? self.hexToRgb(d.color) : self.hexToRgb(self.colors.accents[i]);
 
+          // Resize bars when dragged up/down and highlight
           d3.select(this) 
             .attr('y', function(d){
               return height - Math.max((y(d.value)+yMovement), y(0));
@@ -439,12 +398,12 @@
               return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25);
             });
 
+          // Recalculate/reposition values based on bar position and highlight them
           self.container.selectAll(".value").filter("."+barClass)
             .text(function(d){
-              // TODO: fix for bars with negative value
-              // TODO: fix parseInt so it retains the decimal places of the data given (toFixed converts to string)
-              var value = (d.value + parseFloat(y.invert(yMovement))).toFixed(d.decimalPlaces);
-              return d.prefix + value + d.suffix;
+              var negativeValAdj = d.value > 0 ? -y.invert(0) : y.invert(0),
+                  value = (Math.abs(d.valueDisplayed + parseFloat(y.invert(yMovement)) + negativeValAdj)).toFixed(d.decimalPlaces);
+              return d.prefix + self.addCommasToNum(value) + d.suffix;
             })
             .style('fill', function(){
               return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25);
@@ -459,6 +418,7 @@
             });
         }        
         
+        // Return bars and values back to original values with elasticity
         function dragEnd(d){
           self.bars.transition()
             .ease('elastic' , 1 , .7)
@@ -488,8 +448,7 @@
                    : height - y(d.value) - self.dims.values.margin;  // data>0 valye on top of the chart
             })
             .text(function(d){
-              
-              return d.prefix + d.value + d.suffix;
+              return d.display_value ? d.display_value : d.value;
             })
             .style('fill', function(d,i){
               return d.color ? d.color : self.colors.accents[i];
@@ -510,14 +469,6 @@
               .style('fill', d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25) )
               .style('stroke', d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25) );
           });
-          
-
-       
-
-       
-
-     
-
 
       },
 
@@ -552,7 +503,6 @@
 
       updateData: function() {
 
-
           var self = this;
 
           var scales = self.simpleScaleBuilder(self.dims.width, self.dims.height, self.chartData);
@@ -563,7 +513,6 @@
           // is there a better way than exposing these?!
           self.y = y;
           self.x = x;
-
 
           var width = self.dims.width,
              height = self.dims.height;       
@@ -579,6 +528,7 @@
 
         // Resize container based on new margins
         staticObj._setupContainerSize(self); 
+        self.parseValues();
         
           if(self.dataLength!=self.chartData.length) {
 
@@ -636,7 +586,7 @@
             self.labels.text(function(d) {return d.label;});
           }
           // self.labels.text(function(d) {return d.label;});
-          self.values.text(function(d) {return d.prefix + d.value + d.suffix ;}); // TODO: update to use tween
+          self.values.text(function(d) {return d.prefix + d.value + d.suffix ;}); 
           // self.animate();
 
       },
