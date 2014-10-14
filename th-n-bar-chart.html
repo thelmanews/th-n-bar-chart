@@ -197,9 +197,9 @@
 
     Polymer('th-n-bar-chart', {
       chartData: [
-        {label: 'Player', value: 15,  color:''},
-        {label: 'Vendor', value: -20,  color:''},
-        {label: 'Mascot', value: 35,  color:''}
+        {label: 'Player', value: 15, display_value: '$15',  color:''},
+        {label: 'Vendor', value: 20, display_value: '$20',  color:''},
+        {label: 'Mascot', value: 35, display_value: '$35',  color:''}
       ],
       /**
        * show horizontal line from zero point when dealing with negative values
@@ -271,7 +271,7 @@
           } else {
             datapoint.prefix = datapoint.value > 0 ? '' : '-';
             datapoint.suffix = '';
-            datapoint.valueDisplay ed = Math.abs(datapoint.value);
+            datapoint.valueDisplayed = Math.abs(datapoint.value);
             datapoint.decimalPlaces = self.getDecimalPlaces(datapoint.value);
           }
           
