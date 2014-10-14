@@ -222,9 +222,9 @@
 
     Polymer('th-n-bar-chart', {
       chartData: [
-        {label: 'Player', value: 15, display_value:'15mm', color:''},
-        {label: 'Vendor', value: 20, display_value:'$20mm', color:''},
-        {label: 'Mascot', value: 35, display_value:'$35.5', color:''}
+        {label: 'Player', value: 15, display_value:'$15,000', color:''},
+        {label: 'Vendor', value: 20, display_value:'$20,000', color:''},
+        {label: 'Mascot', value: 35, display_value:'$35,000', color:''}
       ],
       /**
        * show horizontal line from zero point when dealing with negative values
@@ -275,28 +275,23 @@
             self.labels.text(function(d) {return d.label;});  
           }
           
-          self.values.text(function(d) {
-            
-            // return d.preVal + d.value + d.postVal;
+          self.values.text(function(d) {            
             return 0;
           });
             
       },
       parseValues: function(){
         var self = this,
-            // TODO: refactor regex
-            preValMatch = /\D*(?=\d*)/,
-            postValMatch = /\D*\d*\.?\d*(\D*)/,
-            valMatch = /\D*(\d*\.?\d*)\D*/,
+            valueRegex = /(\D*)(\d*\.?\d*)(\D*)/, // Matchgroups: 1) prefix 2) value 3) suffix
             dataLength = self.chartData.length;
             
         // Split display value into pieces to separate out value and detect decimal places    
         for (var i=0; i<dataLength; i++){
           var datapoint = self.chartData[i];
           if (datapoint.display_value){
-            datapoint.preVal = datapoint.display_value.replace(',','').match(preValMatch)[0];
-            datapoint.postVal = datapoint.display_value.replace(',','').match(postValMatch)[1];
-            datapoint.value = parseFloat(datapoint.display_value.replace(',','').match(valMatch)[1]);
+            datapoint.prefix = datapoint.display_value.replace(',','').match(valueRegex)[1];
+            datapoint.value = parseFloat(datapoint.display_value.replace(',','').match(valueRegex)[2]);
+            datapoint.suffix = datapoint.display_value.replace(',','').match(valueRegex)[3];
             datapoint.decimalPlaces = self.getDecimalPlaces(datapoint.value);
           }
           
@@ -304,7 +299,6 @@
         
         // use the value for the scale and display value for the display value
         // figure out the case where display value isnt provided
-        // add count up to the number initally
         // figure out the decimal places and commas
         // make sure parsevalues is called in the right spots (updateData)
         // 
@@ -374,7 +368,7 @@
               // TODO: fix for bars with negative value
               // TODO: fix parseInt so it retains the decimal places of the data given (toFixed converts to string)
               var value = (d.value + parseFloat(y.invert(yMovement))).toFixed(d.decimalPlaces);
-              return d.preVal + value + d.postVal;
+              return d.prefix + value + d.suffix;
             })
             .style('fill', function(){
               return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25);
@@ -418,8 +412,8 @@
                    : height - y(d.value) - self.dims.values.margin;  // data>0 valye on top of the chart
             })
             .text(function(d){
-
-              return d.preVal + d.value + d.postVal;
+              
+              return d.prefix + d.value + d.suffix;
             })
             .style('fill', function(d,i){
               return d.color ? d.color : self.colors.accents[i];
@@ -449,7 +443,7 @@
             // subtract y(0) from height to support neg. values
             return Math.abs(y(d.value) - y(0));})
           .style('opacity', 1);
-        
+
         self.values
           .transition().duration(this.animationDelay)
           .attr('x', function(d,i) { return self.x(i) + self.dims.bars.width/2; })
@@ -462,9 +456,14 @@
           .tween('text', function(d){
             var progress = 0; // TODO: not always 0?
             var i = d3.interpolate(progress, d.value);
+            
             return function(t) {  
                 progress = i(t);
-                this.textContent = d.preVal + progress.toFixed(d.decimalPlaces) + d.postVal;
+                if (progress >= 1000){
+                  this.textContent = d.prefix + self.addCommasToNum(progress.toFixed(d.decimalPlaces)) + d.suffix;
+                } else {
+                  this.textContent = d.prefix + progress.toFixed(d.decimalPlaces) + d.suffix;
+                }
               };
             })
 
@@ -500,6 +499,12 @@
           .attr('y1', self.dims.height - y(0))
           .attr('x2', self.dims.width)
           .attr('y2', self.dims.height - y(0));
+
+      },
+      touchAnimate: function(){
+
+         // TODO
+
 
       },
 
@@ -620,7 +625,7 @@
             self.labels.text(function(d) {return d.label;});
           }
           // self.labels.text(function(d) {return d.label;});
-          self.values.text(function(d) {return d.preVal + d.value + d.postVal ;});
+          self.values.text(function(d) {return d.prefix + d.value + d.suffix ;}); // TODO: update to use tween
           // self.animate();
 
       },
