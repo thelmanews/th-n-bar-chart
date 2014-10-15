@@ -49,9 +49,6 @@
 
       
       // Adding private static methods.
-
-
-
      staticObj._setupElements = function(polymerObj) {
           var height = polymerObj.dims.height;
           // Create a container for chart
@@ -367,13 +364,17 @@
         
 
       },
+      /**
+       * 'setupTouchAnimate' adds interaction to the bars values and labels so they can be dragged by the user
+       */
       setupTouchAnimate: function(){
 
         var self = this,
             height = self.dims.height,
             x = self.x,
             y = self.y,
-            startY;
+            startY,
+            brightness = 0.35;
        
         var drag = d3.behavior.drag()
             .origin(function() { 
@@ -397,10 +398,10 @@
             })
             .attr('height',  barHeight)
             .style("fill", function(d){ 
-              return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25);
+              return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(brightness);
             })
             .style("stroke", function(d){ 
-              return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25);
+              return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(brightness);
             });
 
           // Recalculate/reposition values based on bar position and highlight them
@@ -411,19 +412,25 @@
               return d.prefix + self.addCommasToNum(value) + d.suffix;
             })
             .style('fill', function(){
-              return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25);
+              return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(brightness);
             })
             .style('stroke', function(){
-              return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25);
+              return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(brightness);
             })
             .attr('transform', function(d){
               return d.value<0 
                 ? "translate(0,0)"
                 : "translate(0,"+(-yMovement)+")";
             });
+
+          // Brighten the color of the labels
+          self.container.selectAll(".label").filter("."+barClass)
+            .style('fill', function(){
+              return d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(brightness);
+            });
         }        
         
-        // Return bars and values back to original values with elasticity
+        // Return bars back to original position and color with elasticity
         function dragEnd(d){
           self.bars.transition()
             .ease('elastic' , 1 , .7)
@@ -442,6 +449,7 @@
               return d.color ? d.color : self.colors.accents[i];
             });              
 
+          // Return values back to original position, color and number
           self.values
             .transition().ease('elastic' , 1 , .7)
             .duration(600)
@@ -462,6 +470,12 @@
               return d.color ? d.color : self.colors.accents[i];
             });
 
+          // Unbrighten the color of the labels
+          self.labels
+            .style('fill', function(d,i){
+              return d.color ? d.color : self.colors.accents[i];
+            });
+
           startY = null;
         }
 
@@ -471,8 +485,8 @@
           .on('down', function(d,i){
             var rgbCode = d.color ? self.hexToRgb(d.color) : self.hexToRgb(self.colors.accents[i]);
             d3.select(this)
-              .style('fill', d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25) )
-              .style('stroke', d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(0.25) );
+              .style('fill', d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(brightness) )
+              .style('stroke', d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(brightness) );
           });
 
       },
