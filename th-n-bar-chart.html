@@ -379,7 +379,7 @@
         var drag = d3.behavior.drag()
             .origin(function() { 
                   var t = d3.select(this);
-                  return {x: t.attr("x"), y: t.attr("y")};
+                  return {x: t.attr("cx"), y: t.attr("cy")};
               })
             .on("drag", dragMove)
             .on('dragend', dragEnd);
@@ -407,8 +407,11 @@
           // Recalculate/reposition values based on bar position and highlight them
           self.container.selectAll(".value").filter("."+barClass)
             .text(function(d){
-              var negativeValAdj = d.value > 0 ? -y.invert(0) : y.invert(0),
-                  value = (Math.abs(d.valueDisplayed + parseFloat(y.invert(yMovement)) + negativeValAdj)).toFixed(d.decimalPlaces);
+              if (d.value > 0){
+                var value = (Math.abs(d.valueDisplayed + parseFloat(y.invert(yMovement)) - y.invert(0))).toFixed(d.decimalPlaces);
+              } else {
+                var value = (Math.abs(d.valueDisplayed - parseFloat(y.invert(yMovement)) + y.invert(0))).toFixed(d.decimalPlaces);
+              }
               return d.prefix + self.addCommasToNum(value) + d.suffix;
             })
             .style('fill', function(){
@@ -488,6 +491,7 @@
               .style('fill', d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(brightness) )
               .style('stroke', d3.rgb(rgbCode.r, rgbCode.g, rgbCode.b).brighter(brightness) );
           });
+
 
       },
 
