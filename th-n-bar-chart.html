@@ -385,6 +385,7 @@
             .on('dragend', dragEnd);
 
         function dragMove(d,i){
+          d3.event.sourceEvent.preventDefault(); // Prevents vertical swiping of browser
           startY = startY || d3.event.y;
           var yMovement = startY - d3.event.y || 0,
               barHeight = Math.abs(y(d.value) - y(0)+ yMovement),
