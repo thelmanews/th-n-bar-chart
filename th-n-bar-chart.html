@@ -174,20 +174,26 @@
             .attr('x2', polymerObj.dims.width)
             .attr('y2', polymerObj.dims.height - y(0));
 
+                    // this is independent of size but dependent on data
+          if (polymerObj.wrapLabels){
+            polymerObj.labels.html(function(d) {return d.label;});
+          } else {
+            polymerObj.labels.text(function(d) {return d.label;});  
+          }
+
       };
 
       staticObj._setupContainerSize = function(polymerObj) {
           var margin = polymerObj.dims.margin,
             width = polymerObj.dims.width,
             height = polymerObj.dims.height;
-
-
+            
           polymerObj.svg
             .attr('width', width + margin.left + margin.right)
             .attr('height', height + margin.top + margin.bottom);
 
           // setting up the size. needed for resizing
-          polymerObj.container.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+          polymerObj.container.attr('transform', 'translate(' + margin.left + ',' + (margin.top - margin.bottom) + ')');
 
       };
 
@@ -197,7 +203,7 @@
       chartData: [
         {label: 'Player', value: 15, display_value: '$15',  color:''},
         {label: 'Vendor', value: 20, display_value: '$20',  color:''},
-        {label: 'Mascot', value: 35, display_value: '$35',  color:''}
+        {label: 'Mascsa da sd aasot', value: 35, display_value: '$35',  color:''}
       ],
       /**
        * show horizontal line from zero point when dealing with negative values
@@ -208,7 +214,7 @@
        * 'wrapLabels' if true will wrap labels on multiple lines. If false, it will angle them.
        * @type {Boolean}
        */
-      wrapLabels: false, 
+      wrapLabels: true, 
       init: function() {
         
           var self = this;
@@ -221,8 +227,7 @@
 
           var margin = self.dims.margin,
               width = self.dims.width,
-              height = self.dims.height;
-
+              height = self.dims.height - self.dims.margin.bottom;
 
           self.dataLength = self.chartData.length;
 
@@ -503,10 +508,10 @@
           self.dims = self.setupDimensions(self);
 
           staticObj._setupContainerSize(self); // correct size if margins are changed (by setting the label diagonal)
-
+          self.dims = staticObj.setupBarLabelDims(self.dims, self.chartData, 1, 1.3, self.wrapLabels);
           var margin = self.dims.margin,
               width = self.dims.width,
-              height = self.dims.height;
+              height = self.dims.height- self.dims.margin.bottom;
 
           var scales = self.simpleScaleBuilder(width, height, self.chartData);
 
@@ -517,7 +522,7 @@
           self.y = y;
           self.x = x;
 
-          self.dims = staticObj.setupBarLabelDims(self.dims, self.chartData, 1, 1.3, self.wrapLabels);
+          
 
           staticObj._setElementSizes(self);
 
@@ -528,6 +533,11 @@
       updateData: function() {
 
           var self = this;
+                  // Adjust margins for changes in labels and values
+        self.dims = staticObj.setupBarLabelDims(self.dims, self.chartData, 1, 1.3, self.wrapLabels);
+
+          var width = self.dims.width,
+             height = self.dims.height - self.dims.margin.bottom;       
 
           var scales = self.simpleScaleBuilder(self.dims.width, self.dims.height, self.chartData);
 
@@ -538,16 +548,13 @@
           self.y = y;
           self.x = x;
 
-          var width = self.dims.width,
-             height = self.dims.height;       
+          
 
         self.bars = self.container.selectAll('.bar').data(self.chartData);
         self.labelGroups = self.container.selectAll('.labelg').data(self.chartData);
         self.labels = self.container.selectAll('.label').data(self.chartData);
         self.values=self.container.selectAll('.value').data(self.chartData);
         
-        // Adjust margins for changes in labels and values
-        self.dims = staticObj.setupBarLabelDims(self.dims, self.chartData, 1, 1.3, self.wrapLabels);
 
 
         // Resize container based on new margins
@@ -605,9 +612,9 @@
 
           // this is independent of size but dependent on data
           if (self.wrapLabels){
-            self.labels.html(function(d) {return d.label;});
+            self.labels.html(function(d) {return d.label;}); // Not working
           } else {
-            self.labels.text(function(d) {return d.label;});
+            self.labels.text(function(d) {return d.label;}); // Not working
           }
           
           self.values.text(function(d) {return d.display_value ? d.display_value : d.value ;}); 
