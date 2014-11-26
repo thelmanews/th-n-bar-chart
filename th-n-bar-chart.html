@@ -10,6 +10,8 @@
         :host {
           display: inline-block;
           position: relative;
+          width: 300px;
+          height: 250px;
         }
 
         #data_errors {  
@@ -203,7 +205,7 @@
       chartData: [
         {label: 'Player', value: 15, display_value: '$15',  color:''},
         {label: 'Vendor', value: 20, display_value: '$20',  color:''},
-        {label: 'Mascsa da sd aasot', value: 35, display_value: '$35',  color:''}
+        {label: 'Mascot', value: 35, display_value: '$35',  color:''}
       ],
       /**
        * show horizontal line from zero point when dealing with negative values
@@ -656,8 +658,6 @@
                   "thumbnail":"nbar.jpg", 
                   "tags":["chart", "bar"],
                   "inputAttr": {
-                    "chartWidth":{"friendly":"Width", "type":"int", "default":200},
-                    "chartHeight":{"friendly":"Height", "type":"int", "default":300},
                     "chartData":{"friendly":"Data", "type":"table-repeating","rows":2, 
                       "fields":{
                         "label":{"friendly":"Label", "type":"string", "default":"Player"},
