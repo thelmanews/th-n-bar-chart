@@ -187,13 +187,14 @@
           var margin = polymerObj.dims.margin,
             width = polymerObj.dims.width,
             height = polymerObj.dims.height;
-            
+            console.log(margin.top);
+            console.log(margin.bottom);
           polymerObj.svg
             .attr('width', width + margin.left + margin.right)
             .attr('height', height + margin.top + margin.bottom);
 
           // setting up the size. needed for resizing
-          polymerObj.container.attr('transform', 'translate(' + margin.left + ',' + (margin.top - margin.bottom) + ')');
+          polymerObj.container.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
       };
 
@@ -203,7 +204,7 @@
       chartData: [
         {label: 'Player', value: 15, display_value: '$15',  color:''},
         {label: 'Vendor', value: 20, display_value: '$20',  color:''},
-        {label: 'Mascsa da sd aasot', value: 35, display_value: '$35',  color:''}
+        {label: 'Mascot', value: 35, display_value: '$35',  color:''}
       ],
       /**
        * show horizontal line from zero point when dealing with negative values
@@ -214,7 +215,7 @@
        * 'wrapLabels' if true will wrap labels on multiple lines. If false, it will angle them.
        * @type {Boolean}
        */
-      wrapLabels: true, 
+      wrapLabels: false, 
       init: function() {
         
           var self = this;
@@ -227,7 +228,7 @@
 
           var margin = self.dims.margin,
               width = self.dims.width,
-              height = self.dims.height - self.dims.margin.bottom;
+              height = self.dims.height ;
 
           self.dataLength = self.chartData.length;
 
