@@ -335,7 +335,7 @@
                : height - y(d.value) - self.dims.values.margin;  // data>0 valye on top of the chart
           })
           .style('opacity', 1)
-          .text(function(d){ return d.display_value ? d.display_value : d.value});
+          .text(function(d){ return d.display_value ? d.display_value : d.value.toFixed(2)});
           
 
         if (self.wrapLabels){
