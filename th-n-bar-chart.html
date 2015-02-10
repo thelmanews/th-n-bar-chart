@@ -191,8 +191,7 @@
           var margin = polymerObj.dims.margin,
             width = polymerObj.dims.width,
             height = polymerObj.dims.height;
-            console.log(margin.top);
-            console.log(margin.bottom);
+
           polymerObj.svg
             .attr('width', width + margin.left + margin.right)
             .attr('height', height + margin.top + margin.bottom);
@@ -274,6 +273,8 @@
         // Split display value into pieces to separate out suffix/prefix and detect decimal places    
         for (var i=0; i<dataLength; i++){
           var datapoint = self.chartData[i];
+          datapoint.display_value = self.escapeChars(datapoint.display_value);
+
           if (datapoint.display_value){
             datapoint.prefix = datapoint.display_value.replace(',','').match(valueRegex)[1];
             datapoint.suffix = datapoint.display_value.replace(',','').match(valueRegex)[3];
