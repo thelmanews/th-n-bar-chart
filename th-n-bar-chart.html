@@ -151,13 +151,12 @@
               .attr('height', polymerObj.dims.labels.height);  
             polymerObj.labels
               .attr("class", function(d,i){return "label wrapped-labels data"+i;})
-              .style('color', function(d){ return d.color });
+              .style('color', function(d,i){ return d.color || polymerObj.colors.accents[i]; });
 
           } else {
             polymerObj.labels
             .attr("class", function(d,i){return "label no-stroke data"+i;})
-            .attr('fill', function(d,i){ return polymerObj.colors.accents[i]; })
-            .style("fill", function(d){ return d.color });
+            .style('fill', function(d,i){ return d.color || polymerObj.colors.accents[i]; });
           }
           
           
