@@ -71,7 +71,8 @@
             .attr('class','bar')
             .attr('height', 0)
             .attr('y', function(d){ 
-              return polymerObj.y(0);
+              //set y to max y value (e.g. end of range)
+              return polymerObj.y.range()[1];
             });
 
           // Append labels using HTML or SVG, depending on if they should wrap or angle
@@ -206,7 +207,7 @@
       chartData: [
         {label: 'Player', value: 15, display_value: '$15',  color:''},
         {label: 'Vendor', value: 20, display_value: '$20',  color:''},
-        {label: 'Mascot', value: 35, display_value: '$35',  color:''}
+        {label: 'A Long Mascot', value: 35, display_value: '$35',  color:'#AAA'}
       ],
       /**
        * show horizontal line from zero point when dealing with negative values
