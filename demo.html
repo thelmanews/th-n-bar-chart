@@ -15,13 +15,21 @@
   <link rel="import" href="th-n-bar-chart.html">
 
   <style>
-    * /deep/ .label {font-size: 1em;}
+    * /deep/ .label {font-size: 2.3em;}
+    .container {width: 520px; height: 400px;}
+    th-n-bar-chart {width: 100%; height: 50%; border: 1px dotted #EEE;}
+    * /deep/ svg { border: 1px dotted red;}
   </style>
 </head>
 <body unresolved>
 
   <p>An example of using <code>&lt;th-n-bar-chart></code>:</p>
-  <th-n-bar-chart animateOnInit="true"></th-n-bar-chart>
+  <div class="container">
+    <th-n-bar-chart wrapLabels="true" animateOnInit="true"></th-n-bar-chart>
+    <br>
+
+    <th-n-bar-chart  animateOnInit="true"></th-n-bar-chart>
+  </div>
 
 </body>
 </html>
